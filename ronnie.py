@@ -43,6 +43,7 @@ More usage examples:
 - ronnie.py -t hash.md5 filesize pe.timestamp pe.dll_name  -p ~/yarafiddling/samps -s pe.dll_name  
 - ronnie.py -t hash.md5 filesize pe.timestamp pe.entry_point --path ~/yarafiddling/samps 
 - ronnie.py -t hash.md5 filesize pe.timestamp "uint16be(0)" --path ~/yarafiddling/samps --sort pe.timestamp 
+- ronnie.py --thing hash.md5 pe.timestamp filesize "pe.imphash()" -p ~/yarafiddling/samps -s filesize
 
 '''
 
