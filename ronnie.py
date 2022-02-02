@@ -61,8 +61,8 @@ def main(args = sys.argv[1:]):
     in_things = args.things
 
     # make sure to change all this to reflect the location of your YARA 4.2 binary, and your rule file.
-    config_yara_4_2 = "/Users/steve/yara-4.2.0-rc1/yara"
-    config_yara_rule_file = "/Users/steve/yara-4.2.0-rc1/ruletemp_set2"
+    config_yara_4_2 = "/Users/smiller/yara-4.2.0-rc1/yara"
+    config_yara_rule_file = "/Users/smiller/yara-4.2.0-rc1/ruletemp_set2"
 
     #build yara rule fule
     yara_imports = "import \"pe\" import \"console\" import \"hash\"\n"
@@ -132,21 +132,23 @@ def main(args = sys.argv[1:]):
                         out_table.add_row(new_list)
                         out_table.align = "l"
 
-                    if args.sort:
-                        try:
-                            print("\n[Bleep Blop Directory] Folder scanned: " + os.path.realpath(dir))
-                            print("\n[:great-job:] LIGHT WEIGHT! Heres the sorted table:\n")
+                if args.sort:
+                    try:
+                        print("\n[:great-job:] LIGHT WEIGHT! Heres the sorted table:\n")
+                        if args.sort == "filesize":
+                            print(out_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))
+                        elif args.sort == "pe.machine":
+                            print(out_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))
+                        else:
                             print(out_table.get_string(sortby=(args.sort)))
-                        except:
-                            print("\n[-] Warning: make sure you try to sort by one of the things you've selected")
-                            print("\n[Bleep Bloop Directory] Folder scanned: " + os.path.realpath(dir))
-                            print("\n[:thumbsup:] Thumbs up on a cool unsorted table tho:\n")
-                            print(out_table)
-                    else:
-                        print("\n[Bleep Blop Directory] Folder scanned: " + os.path.realpath(dir))
-                        print("\n[:very-ok-emoji:] Thumbs up on a very ok unsorted table:\n")
+                    except:
+                        print("\n[:boo-frown:] Warning: make sure you try to sort by one of the things you've selected")
+                        print("\n[:thumbs-up:] Thumbs up on a cool unsorted table tho:\n")
                         print(out_table)
-                        print("\n")  
+                else:
+                    print("\n[:very-ok-emoji:] Thumbs up on a very ok unsorted table:\n")
+                    print(out_table)
+                    print("\n")  
             except:
                 print("Error in the file walking part #TRYLOOP1")
         #print(out_table)
