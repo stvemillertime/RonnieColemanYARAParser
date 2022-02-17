@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import pathlib
+from posixpath import split
 import sys
 from datetime import datetime
 import argparse
@@ -54,6 +55,7 @@ def main(args = sys.argv[1:]):
     parser.add_argument('-t','--things', nargs='+', type=str, required=True, help='This is your input thing')
     parser.add_argument('-p','--path', type=pathlib.Path, required=True, help='File path to apply to.')
     parser.add_argument('-s','--sort', type=str, required=False, help='Thing to sort by.')
+    parser.add_argument('--filenames',type=bool)
     args = parser.parse_args(args)
     # do shit with rule argument
     
@@ -61,8 +63,8 @@ def main(args = sys.argv[1:]):
     in_things = args.things
 
     # make sure to change all this to reflect the location of your YARA 4.2 binary, and your rule file.
-    config_yara_4_2 = "/Users/smiller/yara-4.2.0-rc1/yara"
-    config_yara_rule_file = "/Users/smiller/yara-4.2.0-rc1/ruletemp_set2"
+    config_yara_4_2 = "/Users/steve/yara-4.2.0-rc1/yara"
+    config_yara_rule_file = "/Users/steve/yara-4.2.0-rc1/ruletemp_set2"
 
     #build yara rule fule
     yara_imports = "import \"pe\" import \"console\" import \"hash\"\n"
@@ -92,6 +94,15 @@ def main(args = sys.argv[1:]):
                 input_things_for_columns = args.things
                 out_table = PrettyTable()
                 out_table.field_names = input_things_for_columns
+
+                alt_table = PrettyTable()
+                new_fields = []
+                for i in out_table.field_names:
+                    new_fields.append(i)
+                new_fields.append("fullpath")
+                alt_table.field_names = new_fields    
+                
+                
                 os.chdir(args.path)
                 for dir,subdirs,files in os.walk("."):
                     for f in files: 
@@ -105,8 +116,10 @@ def main(args = sys.argv[1:]):
                         x = input_things_for_columns 
                         new_built_row = []
                         for r in list_of_results:
+                            #if r != '' and not omit in r:
                             if r != '' and not omit in r:
-                                    new_built_row.append(r)
+                                new_built_row.append(r)
+                                new_built_row.append(fullpath)
 
                         new_list = []
 
@@ -127,27 +140,42 @@ def main(args = sys.argv[1:]):
                                 new_list.append((hex(int(mod))) + ' (' + mod + ')')
                                 #new_list.append((hex(int(mod))))
                             else:    
-                                new_list.append(mod)   
+                                new_list.append(mod)
                         
                         out_table.add_row(new_list)
                         out_table.align = "l"
+
+
+                        path_split_str = fullpath #do a split on this if you need to grab a substring of the full path
+                        alt_list = new_list
+                        alt_list.append(path_split_str)
+                        alt_table.add_row(alt_list)
 
                 if args.sort:
                     try:
                         print("\n[:great-job:] LIGHT WEIGHT! Heres the sorted table:\n")
                         if args.sort == "filesize":
-                            print(out_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))
+                            if args.filenames:
+                                print(alt_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))
+                            else:
+                                print(out_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))
                         elif args.sort == "pe.machine":
                             print(out_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))
                         else:
-                            print(out_table.get_string(sortby=(args.sort)))
+                            if args.filenames:
+                                print(alt_table.get_string(sortby=(args.sort)))
+                            else:
+                                print(out_table.get_string(sortby=(args.sort)))
                     except:
                         print("\n[:boo-frown:] Warning: make sure you try to sort by one of the things you've selected")
                         print("\n[:thumbs-up:] Thumbs up on a cool unsorted table tho:\n")
                         print(out_table)
                 else:
                     print("\n[:very-ok-emoji:] Thumbs up on a very ok unsorted table:\n")
-                    print(out_table)
+                    if args.filenames:
+                        print(alt_table)
+                    else:
+                        print(out_table)
                     print("\n")  
             except:
                 print("Error in the file walking part #TRYLOOP1")
