@@ -45,17 +45,42 @@ More usage examples:
 - ronnie.py -t hash.md5 filesize pe.timestamp pe.entry_point --path ~/yarafiddling/samps 
 - ronnie.py -t hash.md5 filesize pe.timestamp "uint16be(0)" --path ~/yarafiddling/samps --sort pe.timestamp 
 - ronnie.py --thing hash.md5 pe.timestamp filesize "pe.imphash()" -p ~/yarafiddling/samps -s filesize
+- ronnie.py -p ~/path_of_stuff -t hash.md5 pe.timestamp "pe.imphash()" --sort pe.timestamp --filepaths --csv ~/output_csv.txt
 
 '''
+
+def ptable_to_csv(table, filename, headers=True):
+    """Save PrettyTable results to a CSV file.
+
+    Adapted from @AdamSmith https://stackoverflow.com/questions/32128226
+
+    :param PrettyTable table: Table object to get data from.
+    :param str filename: Filepath for the output CSV.
+    :param bool headers: Whether to include the header row in the CSV.
+    :return: None
+    """
+    raw = table.get_string()
+    data = [tuple(filter(None, map(str.strip, splitline)))
+            for line in raw.splitlines()
+            for splitline in [line.split('|')] if len(splitline) > 1]
+    if table.title is not None:
+        data = data[1:]
+    if not headers:
+        data = data[1:]
+    with open(filename, 'w') as f:
+        for d in data:
+            f.write('{}\n'.format(','.join(d)))
+
 
 def main(args = sys.argv[1:]):
 
 
     parser = argparse.ArgumentParser(prog = "ronnie.py", description="Ronnie Coleman doing bulk lifts on arbitary PE features using YARA console logging.")
-    parser.add_argument('-t','--things', nargs='+', type=str, required=True, help='This is your input thing')
-    parser.add_argument('-p','--path', type=pathlib.Path, required=True, help='File path to apply to.')
+    parser.add_argument('-t','--things', nargs='+', type=str, required=True, help='This is your input thing, should probably be PE module stuff. See readme.')
+    parser.add_argument('-p','--path', type=pathlib.Path, required=True, help='File path of the things you want to scan. It might be recursive.')
     parser.add_argument('-s','--sort', type=str, required=False, help='Thing to sort by.')
-    parser.add_argument('--filenames',type=bool)
+    parser.add_argument('--filepaths', action='store_true', help='Flag to see the full filepath at end of table.')
+    parser.add_argument('--csv', type=pathlib.Path, required=False, help='You can export a csv here.')
     args = parser.parse_args(args)
     # do shit with rule argument
     
@@ -65,6 +90,7 @@ def main(args = sys.argv[1:]):
     # make sure to change all this to reflect the location of your YARA 4.2 binary, and your rule file.
     config_yara_4_2 = "/Users/steve/yara-4.2.0-rc1/yara"
     config_yara_rule_file = "/Users/steve/yara-4.2.0-rc1/ruletemp_set2"
+    config_csv_path = ""
 
     #build yara rule fule
     yara_imports = "import \"pe\" import \"console\" import \"hash\"\n"
@@ -150,32 +176,65 @@ def main(args = sys.argv[1:]):
                         alt_list = new_list
                         alt_list.append(path_split_str)
                         alt_table.add_row(alt_list)
+                        alt_table.align = "l"
+
+                
+                
+                
+                #if args.csv:
+                #    config_csv_path = args.csv
+                #    ptable_to_csv(out_table,config_csv_path,headers=True)   
+                
 
                 if args.sort:
                     try:
                         print("\n[:great-job:] LIGHT WEIGHT! Heres the sorted table:\n")
                         if args.sort == "filesize":
-                            if args.filenames:
-                                print(alt_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))
+                            if args.filepaths:
+                                print(alt_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))                         
                             else:
-                                print(out_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))
+                                print(out_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))               
                         elif args.sort == "pe.machine":
                             print(out_table.get_string(sortby=(args.sort),sort_key=lambda row: int(row[0])))
                         else:
-                            if args.filenames:
+                            if args.filepaths:
                                 print(alt_table.get_string(sortby=(args.sort)))
+                                if args.csv:
+                                    try:
+                                        config_csv_path = args.csv
+                                        ptable_to_csv(alt_table,config_csv_path,headers=True)                           
+                                    except:
+                                        print("Something bad happened in csv write.")                                   
                             else:
                                 print(out_table.get_string(sortby=(args.sort)))
+                                if args.csv:
+                                    try:
+                                        config_csv_path = args.csv
+                                        ptable_to_csv(out_table,config_csv_path,headers=True)                           
+                                    except:
+                                        print("Something bad happened in csv write.")                                                              
                     except:
                         print("\n[:boo-frown:] Warning: make sure you try to sort by one of the things you've selected")
                         print("\n[:thumbs-up:] Thumbs up on a cool unsorted table tho:\n")
                         print(out_table)
                 else:
                     print("\n[:very-ok-emoji:] Thumbs up on a very ok unsorted table:\n")
-                    if args.filenames:
+                    if args.filepaths:
                         print(alt_table)
+                        if args.csv:
+                            try:
+                                config_csv_path = args.csv
+                                ptable_to_csv(alt_table,config_csv_path,headers=True)                           
+                            except:
+                                print("Something bad happened in csv write.")
                     else:
                         print(out_table)
+                        if args.csv:
+                            try:
+                                config_csv_path = args.csv
+                                ptable_to_csv(out_table,config_csv_path,headers=True)                           
+                            except:
+                                print("Something bad happened in csv write.")                       
                     print("\n")  
             except:
                 print("Error in the file walking part #TRYLOOP1")
