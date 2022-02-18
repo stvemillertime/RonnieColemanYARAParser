@@ -79,7 +79,7 @@ def main(args = sys.argv[1:]):
     parser.add_argument('-t','--things', nargs='+', type=str, required=True, help='This is your input thing, should probably be PE module stuff. See readme.')
     parser.add_argument('-p','--path', type=pathlib.Path, required=True, help='File path of the things you want to scan. It might be recursive.')
     parser.add_argument('-s','--sort', type=str, required=False, help='Thing to sort by.')
-    parser.add_argument('--filepaths', action='store_true', help='Flag to see the full filepath at end of table.')
+    parser.add_argument('--filepaths', action='store_true', help='True flag to see the full filepath at end of table.')
     parser.add_argument('--csv', type=pathlib.Path, required=False, help='You can export a csv here.')
     args = parser.parse_args(args)
     # do shit with rule argument
