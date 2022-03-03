@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from fileinput import filename
 import pathlib
 from posixpath import split
 import sys
@@ -9,6 +10,7 @@ import re
 import pathlib
 import subprocess
 from prettytable import PrettyTable
+import csv
 
 
 '''
@@ -49,31 +51,22 @@ More usage examples:
 
 '''
 
-def ptable_to_csv(table, filename, headers=True):
-    """Save PrettyTable results to a CSV file.
+def pretty_table_to_tuples(input_str):
+    lines = input_str.split("\n")
+    num_columns = len(re.findall("\+", lines[0])) - 1
+    line_regex = r"\|" + (r" +(.*?) +\|"*num_columns)
+    for line in lines:
+        m = re.match(line_regex, line.strip())
+        if m:
+            yield m.groups()
 
-    Adapted from @AdamSmith https://stackoverflow.com/questions/32128226
-
-    :param PrettyTable table: Table object to get data from.
-    :param str filename: Filepath for the output CSV.
-    :param bool headers: Whether to include the header row in the CSV.
-    :return: None
-    """
-    raw = table.get_string()
-    data = [tuple(filter(None, map(str.strip, splitline)))
-            for line in raw.splitlines()
-            for splitline in [line.split('|')] if len(splitline) > 1]
-    if table.title is not None:
-        data = data[1:]
-    if not headers:
-        data = data[1:]
-    with open(filename, 'w') as f:
-        for d in data:
-            f.write('{}\n'.format(','.join(d)))
-
+def output_csv(table,output_file_path):
+    thing = table.get_string()
+    f = open(output_file_path, 'w')
+    w = csv.writer(f)
+    w.writerows(pretty_table_to_tuples(thing))
 
 def main(args = sys.argv[1:]):
-
 
     parser = argparse.ArgumentParser(prog = "ronnie.py", description="Ronnie Coleman doing bulk lifts on arbitary PE features using YARA console logging.")
     parser.add_argument('-t','--things', nargs='+', type=str, required=True, help='This is your input thing, should probably be PE module stuff. See readme.')
@@ -171,20 +164,11 @@ def main(args = sys.argv[1:]):
                         out_table.add_row(new_list)
                         out_table.align = "l"
 
-
                         path_split_str = fullpath #do a split on this if you need to grab a substring of the full path
                         alt_list = new_list
                         alt_list.append(path_split_str)
                         alt_table.add_row(alt_list)
                         alt_table.align = "l"
-
-                
-                
-                
-                #if args.csv:
-                #    config_csv_path = args.csv
-                #    ptable_to_csv(out_table,config_csv_path,headers=True)   
-                
 
                 if args.sort:
                     try:
@@ -202,7 +186,7 @@ def main(args = sys.argv[1:]):
                                 if args.csv:
                                     try:
                                         config_csv_path = args.csv
-                                        ptable_to_csv(alt_table,config_csv_path,headers=True)                           
+                                        output_csv(alt_table,config_csv_path)                          
                                     except:
                                         print("Something bad happened in csv write.")                                   
                             else:
@@ -210,7 +194,7 @@ def main(args = sys.argv[1:]):
                                 if args.csv:
                                     try:
                                         config_csv_path = args.csv
-                                        ptable_to_csv(out_table,config_csv_path,headers=True)                           
+                                        output_csv(out_table,config_csv_path)                        
                                     except:
                                         print("Something bad happened in csv write.")                                                              
                     except:
@@ -224,7 +208,7 @@ def main(args = sys.argv[1:]):
                         if args.csv:
                             try:
                                 config_csv_path = args.csv
-                                ptable_to_csv(alt_table,config_csv_path,headers=True)                           
+                                output_csv(alt_table,config_csv_path)
                             except:
                                 print("Something bad happened in csv write.")
                     else:
@@ -232,7 +216,7 @@ def main(args = sys.argv[1:]):
                         if args.csv:
                             try:
                                 config_csv_path = args.csv
-                                ptable_to_csv(out_table,config_csv_path,headers=True)                           
+                                output_csv(out_table,config_csv_path)                         
                             except:
                                 print("Something bad happened in csv write.")                       
                     print("\n")  
