@@ -80,12 +80,15 @@ def main(args = sys.argv[1:]):
     in_things = []
     in_things = args.things
 
-    # make sure to change all this to reflect the location of your YARA 4.2 binary, and your rule file.
-    config_yara_4_2 = "/Users/steve/yara-4.2.0-rc1/yara"
-    config_yara_rule_file = "/Users/steve/yara-4.2.0-rc1/ruletemp_set2"
-    config_csv_path = ""
+    # make sure you've got YARA 4.2+
 
-    #build yara rule fule
+    # ATTENTION ! - configure a place to put a temp ruleset (which gets run later)
+    config_yara_rule_file = "/Users/steve/ruletemp"
+
+    # This is to help do something with the output CSV but isnt referenced yet
+    config_csv_path = "/Users/steve/csvout.csv"
+
+    #build yara rule file
     yara_imports = "import \"pe\" import \"console\" import \"hash\"\n"
     f = open(config_yara_rule_file,"w")
     f.write(yara_imports)
@@ -129,7 +132,7 @@ def main(args = sys.argv[1:]):
                         fullpath = os.path.realpath( os.path.join(dir,f) )
                         # if you want this to be recursive over a directory tree you'll want to add a '-r'  as its own term in the subprocess run below. 
                         # and then you'll need to add some better directory handling stuff for the table.
-                        run_yara_alt = subprocess.run([config_yara_4_2,config_yara_rule_file, fullpath],stdout=subprocess.PIPE).stdout.decode('utf-8')
+                        run_yara_alt = subprocess.run(["yara",config_yara_rule_file, fullpath],stdout=subprocess.PIPE).stdout.decode('utf-8')
                         list_of_results = run_yara_alt.split("\n")
                         omit = "rule_"
                         x = input_things_for_columns 
