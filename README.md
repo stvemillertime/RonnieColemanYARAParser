@@ -6,8 +6,9 @@ This script is named after Ronnie Coleman, and peforms bulk lifts on arbitary fi
 
 ### Requirements
 
-- Fresh compile of YARA 4.2.0-rc1 (https://yara.readthedocs.io/en/stable/gettingstarted.html)
-- Bunch of python crap
+- YARA 4.2 or better
+- Bunch of Python crap
+- Built on a Mac, so if you might have to adjust some paths to work on Linux/Windows
 
 ### Notes
 
